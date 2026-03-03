@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Detail Perhitungan KNN</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <style>
+        .card-section { margin-bottom: 2rem; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .bg-math { background-color: #f8f9fa; border-left: 5px solid #0d6efd; }
+        .badge-param { font-size: 0.9rem; padding: 8px 12px; }
+        /* Style tambahan agar tabel rapi */
+        .table th { background-color: #f1f3f5; }
+    </style>
+</head>
+<body class="bg-light p-4">
+
+    <div class="container" style="max-width: 900px;">
+        <a href="{% url 'admin_simulation' %}" class="btn btn-sm btn-outline-secondary mb-4">
+            <i class="bi bi-arrow-left"></i> Kembali ke List
+        </a>
+
+        <div class="card card-section">
+            <div class="card-header bg-white fw-bold py-3">
+                <i class="bi bi-calculator text-primary"></i> Tahap 1: Komparasi Data (Euclidean Distance)
+            </div>
+            <div class="card-body">
+                <div class="row text-center align-items-center">
+                    
+                    <div class="col-md-5">
+                        <div class="border rounded p-3 bg-primary bg-opacity-10">
+                            <h6 class="fw-bold text-primary mb-3">DATA USER (P)</h6>
+                            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                <span class="badge bg-primary badge-param">Usia: {{ user_vector.age }}</span>
+                                <span class="badge bg-primary badge-param">Gender: {{ user_vector.gender }}</span>
+                                <span class="badge bg-primary badge-param">BMI: {{ user_vector.bmi }}</span>
+                                <span class="badge bg-primary badge-param">Act: {{ user_vector.activity }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <h3 class="text-muted fw-bold my-3">VS</h3>
+                    </div>
+
+                    <div class="col-md-5">
+                        <div class="border rounded p-3 bg-success bg-opacity-10">
+                            <h6 class="fw-bold text-success mb-3">TETANGGA #1 (Q)</h6>
+                            {% if neighbor_vector %}
+                            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                <span class="badge bg-success badge-param">Usia: {{ neighbor_vector.age }}</span>
+                                <span class="badge bg-success badge-param">Gender: {{ neighbor_vector.gender }}</span>
+                                <span class="badge bg-success badge-param">BMI: {{ neighbor_vector.bmi }}</span>
+                                <span class="badge bg-success badge-param">Act: {{ neighbor_vector.activity }}</span>
+                            </div>
+                            {% else %}
+                            <span class="text-danger small">Data training tidak ditemukan.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-math p-4 mt-4 rounded">
+                    <h6 class="fw-bold mb-3">Langkah Perhitungan Jarak:</h6>
+                    
+                    <p class="mb-1 text-muted small">Rumus Euclidean Distance (4 Dimensi):</p>
+                    <code class="d-block mb-3 text-dark fs-5">
+                        √ (Age<sub>p</sub> - Age<sub>q</sub>)² + (Gen<sub>p</sub> - Gen<sub>q</sub>)² + (BMI<sub>p</sub> - BMI<sub>q</sub>)² + (Act<sub>p</sub> - Act<sub>q</sub>)²
+                    </code>
+
+                    <p class="mb-1 text-muted small">Substitusi Nilai:</p>
+                    <code class="d-block mb-3 text-dark fs-5">
+                        √ ({{ user_vector.age }} - {{ neighbor_vector.age }})² + 
+                        ({{ user_vector.gender_code }} - {{ neighbor_vector.gender_code }})² + 
+                        ({{ user_vector.bmi_code }} - {{ neighbor_vector.bmi_code }})² + 
+                        ({{ user_vector.activity_code }} - {{ neighbor_vector.activity_code }})²
+                    </code>
+
+                    <div class="d-flex align-items-center mt-3 pt-3 border-top">
+                        <span class="me-3 fw-bold">Jarak (Distance) =</span>
+                        <h3 class="text-danger fw-bold m-0">{{ neighbor_vector.jarak }}</h3>
+                        <span class="ms-3 badge bg-warning text-dark"><i class="bi bi-check-circle"></i> Valid</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-section">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h6 class="fw-bold m-0"><i class="bi bi-list-ol text-primary"></i> 13 Tetangga Terdekat (K={{ k_value }})</h6>
+                <small class="text-muted">Diurutkan dari jarak terdekat (Ranking)</small>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle text-center mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Rank</th>
+                            <th>Jarak</th>
+                            <th>Usia</th>
+                            <th>Gender</th>
+                            <th>BMI</th>
+                            <th>Activity</th> <th>Label (Olahraga)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for n in neighbors %}
+                        <tr class="{% if forloop.first %}table-success border-start border-5 border-success{% endif %}">
+                            <td class="fw-bold">#{{ n.rank }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ n.jarak }}</span></td>
+                            <td>{{ n.age }}</td>
+                            <td>{{ n.gender }}</td>
+                            <td>{{ n.bmi_category }}</td>
+                            <td>{{ n.activity }}</td> <td class="fw-bold">{{ n.class_hasil }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="text-center py-4">Tidak ada data.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card card-section border-success border-2">
+            <div class="card-body text-center py-4">
+                <h6 class="text-uppercase text-muted letter-spacing-1">Kesimpulan Sistem</h6>
+                <h3 class="fw-bold mt-2 mb-4">
+                    "Karena Tetangga #1 melakukan <span class="text-success">{{ neighbor_vector.label }}</span>, maka User direkomendasikan hal yang sama."
+                </h3>
+                
+                <div class="d-inline-flex align-items-center border rounded-pill px-4 py-2 bg-success text-white">
+                    <span class="me-2">Rekomendasi Akhir:</span>
+                    <strong class="fs-5">{{ log.hasil_prediksi }}</strong>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
